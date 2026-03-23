@@ -41,7 +41,7 @@ class _ThreeDButtonState extends State<ThreeDButton>
 
   void _handleTapDown(TapDownDetails details) {
     setState(() => _isPressed = true);
-    FlameAudio.play('click.wav', volume: 0.5);
+    FlameAudio.play('click.wav', volume: 0.9);
   }
 
   @override

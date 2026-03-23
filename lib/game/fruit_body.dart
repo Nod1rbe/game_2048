@@ -17,6 +17,7 @@ class FruitBody extends BodyComponent with ContactCallbacks {
   double dangerTimer = 0;
   double _scale = 1.0;
   bool _growing = false;
+  bool _hasTouched = false; // play drop sound only on first collision
 
   final Vector2 _lastVel = Vector2.zero();
   final Vector2 _scaleVisual = Vector2(1, 1);
@@ -24,6 +25,7 @@ class FruitBody extends BodyComponent with ContactCallbacks {
   // Cached Paint objects to avoid GC churn
   static final Paint _glowPaint = Paint()..style = PaintingStyle.fill;
   static final Map<double, MaskFilter> _blurCache = {};
+  static const int _blurCacheMaxSize = 8;
 
   @override
   void onMount() {
@@ -125,6 +127,12 @@ class FruitBody extends BodyComponent with ContactCallbacks {
       game.tryMerge(this, other);
     }
 
+    // Play a 'diq' drop sound when this fruit first hits anything
+    if (!isStatic && !merged && !_hasTouched) {
+      _hasTouched = true;
+      game.playContactSound();
+    }
+
     if (!isStatic && !merged) {
       // In beginContact, velocity is the pre-resolution velocity.
       final speed = body.linearVelocity.length;
@@ -174,14 +182,17 @@ class FruitBody extends BodyComponent with ContactCallbacks {
     }
 
     if (dangerTimer > 0.4 && !isStatic) {
-      final blurRadius = r * 0.4;
+      final blurRadius = (r * 0.4 * 2).roundToDouble() / 2; // round to 0.5 steps
       _glowPaint.color = Colors.redAccent.withOpacity(
         (dangerTimer / 1.8 * 0.5).clamp(0.0, 0.5),
       );
-      _glowPaint.maskFilter = _blurCache.putIfAbsent(
-        blurRadius,
-        () => MaskFilter.blur(BlurStyle.normal, blurRadius),
-      );
+      if (!_blurCache.containsKey(blurRadius)) {
+        if (_blurCache.length >= _blurCacheMaxSize) {
+          _blurCache.remove(_blurCache.keys.first);
+        }
+        _blurCache[blurRadius] = MaskFilter.blur(BlurStyle.normal, blurRadius);
+      }
+      _glowPaint.maskFilter = _blurCache[blurRadius];
       canvas.drawCircle(Offset.zero, r * 1.3, _glowPaint);
     }
 
