@@ -35,8 +35,8 @@ class SuikaGame extends Forge2DGame with TapCallbacks, DragCallbacks {
   final Map<String, int> _lastPlayedTimes = {}; // For audio throttling
 
   late AudioPool _dropSoundPool;
+  late AudioPool _bloopPool;
   late AudioPool _merge1SoundPool;
-  late AudioPool _merge2SoundPool;
   late AudioPool _merge3SoundPool;
 
   final scoreNotifier = ValueNotifier<int>(0);
@@ -51,15 +51,15 @@ class SuikaGame extends Forge2DGame with TapCallbacks, DragCallbacks {
     await FlameAudio.audioCache.loadAll([
       'click.wav',
       'new_drop.wav',
+      'bloop.mp3',
       'merge1.mp3',
-      'merge2.mp3',
       'merge3.mp3',
     ]);
 
-    _dropSoundPool = await FlameAudio.createPool('new_drop.wav', maxPlayers: 3);
-    _merge1SoundPool = await FlameAudio.createPool('merge1.mp3', maxPlayers: 5);
-    _merge2SoundPool = await FlameAudio.createPool('merge2.mp3', maxPlayers: 5);
-    _merge3SoundPool = await FlameAudio.createPool('merge3.mp3', maxPlayers: 3);
+    _dropSoundPool = await FlameAudio.createPool('new_drop.wav', maxPlayers: 4);
+    _bloopPool = await FlameAudio.createPool('bloop.mp3', maxPlayers: 4);
+    _merge1SoundPool = await FlameAudio.createPool('merge1.mp3', maxPlayers: 2);
+    _merge3SoundPool = await FlameAudio.createPool('merge3.mp3', maxPlayers: 2);
 
     final prefs = await SharedPreferences.getInstance();
     highScore = prefs.getInt('highScore') ?? 0;
@@ -192,7 +192,7 @@ class SuikaGame extends Forge2DGame with TapCallbacks, DragCallbacks {
     _pending!.activate();
     _pending = null;
 
-    _playSound('new_drop.wav', volume: 0.3);
+    _playSound('new_drop.wav', volume: 0.7);
 
     Future.delayed(const Duration(milliseconds: 400), _spawnPending);
   }
@@ -201,19 +201,26 @@ class SuikaGame extends Forge2DGame with TapCallbacks, DragCallbacks {
     final now = DateTime.now().millisecondsSinceEpoch;
     final lastTime = _lastPlayedTimes[path] ?? 0;
     if (now - lastTime > 60) {
-      // 60ms throttle
       if (path == 'new_drop.wav') {
         _dropSoundPool.start(volume: volume);
       } else if (path == 'merge1.mp3') {
         _merge1SoundPool.start(volume: volume);
-      } else if (path == 'merge2.mp3') {
-        _merge2SoundPool.start(volume: volume);
       } else if (path == 'merge3.mp3') {
         _merge3SoundPool.start(volume: volume);
       } else {
         FlameAudio.play(path, volume: volume);
       }
       _lastPlayedTimes[path] = now;
+    }
+  }
+
+  /// Called from FruitBody when a fruit first touches a surface
+  void playContactSound() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final lastTime = _lastPlayedTimes['contact'] ?? 0;
+    if (now - lastTime > 80) {
+      _bloopPool.start(volume: 0.5);
+      _lastPlayedTimes['contact'] = now;
     }
   }
 
@@ -286,10 +293,10 @@ class SuikaGame extends Forge2DGame with TapCallbacks, DragCallbacks {
       _comboCount += mergedThisFrame;
       _comboTimer = 2.0;
 
-      if (_comboCount >= 3) {
+      if (_comboCount >= 2) {
         _playSound('merge3.mp3', volume: 0.5);
       } else {
-        _playSound(Random().nextBool() ? 'merge1.mp3' : 'merge2.mp3', volume: 0.5);
+        _playSound('merge1.mp3', volume: 0.5);
       }
 
       String msg = "";
