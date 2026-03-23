@@ -17,7 +17,7 @@ class FruitBody extends BodyComponent with ContactCallbacks {
   double dangerTimer = 0;
   double _scale = 1.0;
   bool _growing = false;
-  
+
   final Vector2 _lastVel = Vector2.zero();
   final Vector2 _scaleVisual = Vector2(1, 1);
 
@@ -96,7 +96,8 @@ class FruitBody extends BodyComponent with ContactCallbacks {
     body.createFixture(
       FixtureDef(shape)
         ..density = cfg.density
-        ..restitution = 0.0 // completely remove physical bounce to stop trembling
+        ..restitution =
+            0.0 // completely remove physical bounce to stop trembling
         ..friction = cfg.friction
         ..userData = this,
     );
@@ -143,11 +144,11 @@ class FruitBody extends BodyComponent with ContactCallbacks {
       _scale = (_scale + dt * 6).clamp(0.0, 1.0);
       if (_scale >= 1.0) _growing = false;
     }
-    
+
     if (!isStatic && !merged) {
       _lastVel.setFrom(body.linearVelocity);
     }
-    
+
     // recover shape safely preventing overshoot on frame drops
     final recovery = (dt * 10).clamp(0.0, 1.0);
     _scaleVisual.x += (1.0 - _scaleVisual.x) * recovery;
@@ -161,8 +162,7 @@ class FruitBody extends BodyComponent with ContactCallbacks {
     final r = _mRadius;
 
     canvas.save();
-    
-    // Apply Squash/Stretch BEFORE body rotation so it squashes vertically globally
+
     try {
       canvas.rotate(-body.angle);
       canvas.scale(_scaleVisual.x, _scaleVisual.y);
