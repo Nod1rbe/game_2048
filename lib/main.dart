@@ -42,6 +42,7 @@ class _GamePageState extends State<_GamePage> {
       body: GameWidget<SuikaGame>(
         game: _game,
         overlayBuilderMap: {'ui': (context, g) => GameUI(game: g)},
+        initialActiveOverlays: const ['ui'],
       ),
     );
   }

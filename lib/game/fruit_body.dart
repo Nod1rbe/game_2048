@@ -17,6 +17,25 @@ class FruitBody extends BodyComponent with ContactCallbacks {
   double dangerTimer = 0;
   double _scale = 1.0;
   bool _growing = false;
+  
+  final Vector2 _lastVel = Vector2.zero();
+  final Vector2 _scaleVisual = Vector2(1, 1);
+
+  // Cached Paint objects to avoid GC churn
+  static final Paint _glowPaint = Paint()..style = PaintingStyle.fill;
+  static final Map<double, MaskFilter> _blurCache = {};
+
+  @override
+  void onMount() {
+    super.onMount();
+    game.registerFruit(this);
+  }
+
+  @override
+  void onRemove() {
+    game.unregisterFruit(this);
+    super.onRemove();
+  }
 
   FruitBody({
     required this.cfg,
@@ -37,10 +56,11 @@ class FruitBody extends BodyComponent with ContactCallbacks {
   @override
   Body createBody() {
     final bd = BodyDef()
-      ..type = isStatic ? BodyType.static : BodyType.dynamic
+      ..type = BodyType.dynamic
+      ..gravityScale = isStatic ? Vector2.zero() : Vector2.all(1.0)
       ..position = startPos.clone()
-      ..linearDamping = 0.5
-      ..angularDamping = 1.2
+      ..linearDamping = 0.8
+      ..angularDamping = 1.5
       ..allowSleep = true;
 
     final body = world.createBody(bd);
@@ -76,7 +96,7 @@ class FruitBody extends BodyComponent with ContactCallbacks {
     body.createFixture(
       FixtureDef(shape)
         ..density = cfg.density
-        ..restitution = cfg.restitution
+        ..restitution = 0.0 // completely remove physical bounce to stop trembling
         ..friction = cfg.friction
         ..userData = this,
     );
@@ -94,7 +114,7 @@ class FruitBody extends BodyComponent with ContactCallbacks {
 
   void activate() {
     isStatic = false;
-    body.setType(BodyType.dynamic);
+    body.gravityScale = Vector2.all(1.0);
     body.setAwake(true);
   }
 
@@ -102,6 +122,17 @@ class FruitBody extends BodyComponent with ContactCallbacks {
   void beginContact(Object other, Contact contact) {
     if (other is FruitBody && !merged && !other.merged) {
       game.tryMerge(this, other);
+    }
+
+    if (!isStatic && !merged) {
+      // In beginContact, velocity is the pre-resolution velocity.
+      final speed = body.linearVelocity.length;
+      if (speed > 30) {
+        // More noticeable squish based on speed
+        final squeeze = (speed / 350).clamp(0.0, 0.35);
+        _scaleVisual.x = 1.0 + squeeze;
+        _scaleVisual.y = 1.0 - squeeze;
+      }
     }
   }
 
@@ -112,6 +143,15 @@ class FruitBody extends BodyComponent with ContactCallbacks {
       _scale = (_scale + dt * 6).clamp(0.0, 1.0);
       if (_scale >= 1.0) _growing = false;
     }
+    
+    if (!isStatic && !merged) {
+      _lastVel.setFrom(body.linearVelocity);
+    }
+    
+    // recover shape safely preventing overshoot on frame drops
+    final recovery = (dt * 10).clamp(0.0, 1.0);
+    _scaleVisual.x += (1.0 - _scaleVisual.x) * recovery;
+    _scaleVisual.y += (1.0 - _scaleVisual.y) * recovery;
   }
 
   @override
@@ -120,21 +160,29 @@ class FruitBody extends BodyComponent with ContactCallbacks {
 
     final r = _mRadius;
 
+    canvas.save();
+    
+    // Apply Squash/Stretch BEFORE body rotation so it squashes vertically globally
+    try {
+      canvas.rotate(-body.angle);
+      canvas.scale(_scaleVisual.x, _scaleVisual.y);
+      canvas.rotate(body.angle);
+    } catch (_) {}
+
     if (_scale < 1.0) {
-      canvas.save();
       canvas.scale(_scale, _scale);
     }
 
     if (dangerTimer > 0.4 && !isStatic) {
-      canvas.drawCircle(
-        Offset.zero,
-        r * 1.3,
-        Paint()
-          ..color = Colors.redAccent.withOpacity(
-            (dangerTimer / 1.8 * 0.5).clamp(0.0, 0.5),
-          )
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.4),
+      final blurRadius = r * 0.4;
+      _glowPaint.color = Colors.redAccent.withOpacity(
+        (dangerTimer / 1.8 * 0.5).clamp(0.0, 0.5),
       );
+      _glowPaint.maskFilter = _blurCache.putIfAbsent(
+        blurRadius,
+        () => MaskFilter.blur(BlurStyle.normal, blurRadius),
+      );
+      canvas.drawCircle(Offset.zero, r * 1.3, _glowPaint);
     }
 
     final img = FruitAssets.images[cfg.level];
@@ -149,12 +197,12 @@ class FruitBody extends BodyComponent with ContactCallbacks {
         rect: rect,
         image: img,
         fit: BoxFit.contain,
-        filterQuality: FilterQuality.medium,
+        filterQuality: FilterQuality.low,
       );
     } else {
       canvas.drawCircle(Offset.zero, r, Paint()..color = cfg.fallbackColor);
     }
 
-    if (_scale < 1.0) canvas.restore();
+    canvas.restore();
   }
 }
