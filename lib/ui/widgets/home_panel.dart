@@ -5,7 +5,7 @@ import 'package:game_2048/ui/widgets/hud_bar.dart';
 import 'package:game_2048/utils/localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'curved_bottom_bar.dart';
+import 'curved_bottom_bar.dart' show CurvedBottomBar;
 import 'game_theme.dart';
 import 'invite_friends_overlay.dart';
 
