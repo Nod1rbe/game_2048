@@ -5,6 +5,8 @@ import '../configs/fruit_config.dart';
 import 'fruit_assets.dart';
 import 'suika_game.dart';
 
+import 'logic/fruit_physics.dart';
+
 class FruitBody extends BodyComponent with ContactCallbacks {
   final FruitConfig cfg;
   final SuikaGame game;
@@ -17,103 +19,26 @@ class FruitBody extends BodyComponent with ContactCallbacks {
   double dangerTimer = 0;
   double _scale = 1.0;
   bool _growing = false;
-  bool _hasTouched = false; // play drop sound only on first collision
+  bool _hasTouched = false;
 
   final Vector2 _lastVel = Vector2.zero();
   final Vector2 _scaleVisual = Vector2(1, 1);
 
-  // Cached Paint objects to avoid GC churn
   static final Paint _glowPaint = Paint()..style = PaintingStyle.fill;
   static final Map<double, MaskFilter> _blurCache = {};
-  static const int _blurCacheMaxSize = 8;
+  static const int _blurCacheMaxSize = 10;
 
-  @override
-  void onMount() {
-    super.onMount();
-    game.registerFruit(this);
-  }
+  @override void onMount() { super.onMount(); game.registerFruit(this); }
+  @override void onRemove() { game.unregisterFruit(this); super.onRemove(); }
 
-  @override
-  void onRemove() {
-    game.unregisterFruit(this);
-    super.onRemove();
-  }
-
-  FruitBody({
-    required this.cfg,
-    required this.game,
-    required this.startPos,
-    this.isStatic = false,
-    this.initVel,
-    this.popIn = false,
-  }) {
-    if (popIn) {
-      _scale = 0.2;
-      _growing = true;
-    }
+  FruitBody({required this.cfg, required this.game, required this.startPos, this.isStatic = false, this.initVel, this.popIn = false}) {
+    if (popIn) { _scale = 0.2; _growing = true; }
   }
 
   double get _mRadius => cfg.radiusPx / SuikaGame.scale;
 
   @override
-  Body createBody() {
-    final bd = BodyDef()
-      ..type = BodyType.dynamic
-      ..gravityScale = isStatic ? Vector2.zero() : Vector2.all(1.0)
-      ..position = startPos.clone()
-      ..linearDamping = 0.8
-      ..angularDamping = 1.5
-      ..allowSleep = true;
-
-    final body = world.createBody(bd);
-    _addFixture(body);
-    if (initVel != null) body.linearVelocity = initVel!.clone();
-    return body;
-  }
-
-  void _addFixture(Body body) {
-    final rawVerts = FruitAssets.polys[cfg.level] ?? [];
-    Shape shape;
-
-    // Padding (2.5px metrda)
-    final paddedR = _mRadius + (2.5 / SuikaGame.scale);
-
-    if (rawVerts.length >= 3) {
-      final verts = rawVerts
-          .map((v) => Vector2(v.x * paddedR * 2, v.y * paddedR * 2))
-          .toList();
-
-      final area = _signedArea(verts);
-      final ordered = area < 0 ? verts : verts.reversed.toList();
-
-      try {
-        shape = PolygonShape()..set(ordered);
-      } catch (_) {
-        shape = CircleShape()..radius = paddedR;
-      }
-    } else {
-      shape = CircleShape()..radius = paddedR;
-    }
-
-    body.createFixture(
-      FixtureDef(shape)
-        ..density = cfg.density
-        ..restitution =
-            0.0 // completely remove physical bounce to stop trembling
-        ..friction = cfg.friction
-        ..userData = this,
-    );
-  }
-
-  double _signedArea(List<Vector2> pts) {
-    double area = 0;
-    for (int i = 0; i < pts.length; i++) {
-      final j = (i + 1) % pts.length;
-      area += pts[i].x * pts[j].y;
-      area -= pts[j].x * pts[i].y;
-    }
-    return area / 2;
-  }
+  Body createBody() => FruitPhysics.create(world, cfg: cfg, pos: startPos, isStatic: isStatic, vel: initVel, userData: this);
 
   void activate() {
     isStatic = false;
@@ -130,7 +55,7 @@ class FruitBody extends BodyComponent with ContactCallbacks {
     // Play a 'diq' drop sound when this fruit first hits anything
     if (!isStatic && !merged && !_hasTouched) {
       _hasTouched = true;
-      game.playContactSound();
+      game.audio.playContactSound();
     }
 
     if (!isStatic && !merged) {

@@ -121,7 +121,7 @@ class ScoreChip extends StatelessWidget {
           Text(
             '$value',
             style: const TextStyle(
-              color: GameTheme.white,
+              color: GameTheme.black,
               fontSize: 22,
               fontWeight: FontWeight.w900,
               height: 1.0,

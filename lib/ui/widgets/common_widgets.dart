@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'game_theme.dart';
 
@@ -8,7 +9,7 @@ class OverlayPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xCC050C05),
+      color: GameTheme.gradientStart.withOpacity(0.15),
       child: Center(child: child),
     );
   }
@@ -132,4 +133,63 @@ class DividerLine extends StatelessWidget {
     color: GameTheme.border,
     margin: const EdgeInsets.symmetric(vertical: 20),
   );
+}
+
+class GradientBackground extends StatelessWidget {
+  const GradientBackground({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            GameTheme.gradientStart,
+            GameTheme.gradientEnd,
+          ],
+        ),
+      ),
+      child: const DecorativeShapes(),
+    );
+  }
+}
+
+class DecorativeShapes extends StatelessWidget {
+  const DecorativeShapes({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        _buildShape(Icons.close, -0.7, -0.6, 0.5, 24),
+        _buildShape(Icons.panorama_fish_eye, 0.6, -0.8, 0.3, 32),
+        _buildShape(Icons.change_history, -0.6, 0.4, 0.2, 40),
+        _buildShape(Icons.crop_square, 0.4, 0.6, 0.4, 32),
+        _buildShape(Icons.close, 0.8, -0.2, 0.6, 20),
+        _buildShape(Icons.panorama_fish_eye, -0.4, -0.2, 1.2, 48),
+        _buildShape(Icons.change_history, 0.2, -0.4, 0.5, 28),
+        _buildShape(Icons.add, -0.7, 0.1, 0.4, 36),
+        _buildShape(Icons.add, 0.8, 0.7, -0.3, 30),
+      ],
+    );
+  }
+
+  Widget _buildShape(IconData icon, double y, double x, double rot, double size) {
+    return Align(
+      alignment: Alignment(x, y),
+      child: Transform.rotate(
+        angle: rot,
+        child: Opacity(
+          opacity: 0.15,
+          child: Icon(
+            icon,
+            size: size,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
 }

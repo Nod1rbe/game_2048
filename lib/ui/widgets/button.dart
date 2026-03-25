@@ -21,11 +21,11 @@ class ThreeDButton extends StatefulWidget {
     required this.onPressed,
     this.width = 260,
     this.height = 60,
-    this.baseColor = const Color(0xFF3a7d0a),
-    this.gradientStart = const Color(0xFF7fe832),
-    this.gradientEnd = const Color(0xFF5cc010),
-    this.pressedGradientStart = const Color(0xFF5ab81a),
-    this.pressedGradientEnd = const Color(0xFF4caf0f),
+    this.baseColor = const Color(0xFF1E3A8A),
+    this.gradientStart = const Color(0xFF3B82F6),
+    this.gradientEnd = const Color(0xFF2563EB),
+    this.pressedGradientStart = const Color(0xFF1D4ED8),
+    this.pressedGradientEnd = const Color(0xFF1E40AF),
     this.shape = BoxShape.rectangle,
   }) : assert(label != null || child != null);
 

@@ -22,24 +22,56 @@ class BoxBackground extends Component {
     final rect = Rect.fromLTRB(boxL, boxT, boxR, boxB);
     final scale = SuikaGame.scale;
 
-    // Fon
+    // Shisha akvarium fon (Glass background)
     canvas.drawRRect(
       RRect.fromRectAndRadius(rect, Radius.circular(14 / scale)),
       Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0D2B0D), Color(0xFF1A3A1A)],
-        ).createShader(rect),
+        ..color = Colors.white.withOpacity(0.08)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.inner, 2),
     );
 
-    // Chegara
+    // Glass gradients/highlights
+    final highlightPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.white.withOpacity(0.15),
+          Colors.white.withOpacity(0.02),
+          Colors.white.withOpacity(0.12),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(rect);
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(14 / scale)),
+      highlightPaint,
+    );
+
+    // Chegara (Glass Border)
     canvas.drawRRect(
       RRect.fromRectAndRadius(rect, Radius.circular(14 / scale)),
       Paint()
-        ..color = const Color(0xFF2E7D32)
+        ..color = Colors.white.withOpacity(0.4)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 4 / scale,
+        ..strokeWidth = 3 / scale,
+    );
+
+    // Additional glass highlight lines
+    final linePaint = Paint()
+      ..color = Colors.white.withOpacity(0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1 / scale;
+
+    canvas.drawLine(
+      Offset(boxL + 10 / scale, boxT + 10 / scale),
+      Offset(boxL + (boxR - boxL) * 0.3, boxT + 10 / scale),
+      linePaint,
+    );
+    canvas.drawLine(
+      Offset(boxL + 10 / scale, boxT + 10 / scale),
+      Offset(boxL + 10 / scale, boxT + (boxB - boxT) * 0.2),
+      linePaint,
     );
 
     // Danger chizig'i
