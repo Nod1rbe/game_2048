@@ -16,11 +16,6 @@ class GameUI extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           ValueListenableBuilder<bool>(
-            valueListenable: game.gameStartedNotifier,
-            builder: (_, started, __) =>
-                !started ? HomePanel(game: game) : const SizedBox.shrink(),
-          ),
-          ValueListenableBuilder<bool>(
             valueListenable: game.gameOverNotifier,
             builder: (_, over, __) =>
                 over ? GameOverPanel(game: game) : const SizedBox.shrink(),

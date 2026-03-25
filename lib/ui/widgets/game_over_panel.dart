@@ -79,12 +79,15 @@ class GameOverPanel extends StatelessWidget {
                     shape: BoxShape.circle,
                     width: 60,
                     height: 60,
-                    onPressed: game.goHome,
-                    baseColor: const Color(0xFF1F4A1F),
-                    gradientStart: const Color(0xFF337A33),
-                    gradientEnd: const Color(0xFF245724),
-                    pressedGradientStart: const Color(0xFF245724),
-                    pressedGradientEnd: const Color(0xFF183D18),
+                    onPressed: () {
+                      game.goHome();
+                      Navigator.of(context).pop();
+                    },
+                    baseColor: const Color(0xFF1E3A8A),
+                    gradientStart: const Color(0xFF3B82F6),
+                    gradientEnd: const Color(0xFF2563EB),
+                    pressedGradientStart: const Color(0xFF1D4ED8),
+                    pressedGradientEnd: const Color(0xFF1E40AF),
                     child: const Icon(
                       Icons.home_rounded,
                       color: Colors.white,
@@ -97,10 +100,10 @@ class GameOverPanel extends StatelessWidget {
                     height: 60,
                     onPressed: game.restart,
                     baseColor: const Color(0xFF7A0000),
-                    gradientStart: const Color(0xFFFF5555),
-                    gradientEnd: const Color(0xFFCC0000),
-                    pressedGradientStart: const Color(0xFFCC0000),
-                    pressedGradientEnd: const Color(0xFF990000),
+                    gradientStart: const Color(0xFFFF5252),
+                    gradientEnd: const Color(0xFFD32F2F),
+                    pressedGradientStart: const Color(0xFFC62828),
+                    pressedGradientEnd: const Color(0xFFB71C1C),
                     child: const Icon(
                       Icons.refresh_rounded,
                       color: Colors.white,

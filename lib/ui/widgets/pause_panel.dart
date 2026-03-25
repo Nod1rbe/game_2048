@@ -57,7 +57,7 @@ class PausePanel extends StatelessWidget {
               Text(
                 GameTexts.get('O\'yin to\'xtatildi'),
                 style: const TextStyle(
-                  color: Color(0xFF5A8A5A),
+                  color: Color(0xFF6366F1),
                   fontSize: 13,
                   letterSpacing: 1,
                 ),
@@ -81,7 +81,7 @@ class PausePanel extends StatelessWidget {
                       Text(
                         GameTexts.get('Joriy ball: '),
                         style: const TextStyle(
-                          color: Color(0xFF5A8A5A),
+                          color: Color(0xFF6366F1),
                           fontSize: 14,
                         ),
                       ),
@@ -105,12 +105,15 @@ class PausePanel extends StatelessWidget {
                     shape: BoxShape.circle,
                     width: 60,
                     height: 60,
-                    onPressed: game.goHome,
-                    baseColor: const Color(0xFF1F4A1F),
-                    gradientStart: const Color(0xFF337A33),
-                    gradientEnd: const Color(0xFF245724),
-                    pressedGradientStart: const Color(0xFF245724),
-                    pressedGradientEnd: const Color(0xFF183D18),
+                    onPressed: () {
+                      game.goHome();
+                      Navigator.of(context).pop();
+                    },
+                    baseColor: const Color(0xFF1E3A8A),
+                    gradientStart: const Color(0xFF3B82F6),
+                    gradientEnd: const Color(0xFF2563EB),
+                    pressedGradientStart: const Color(0xFF1D4ED8),
+                    pressedGradientEnd: const Color(0xFF1E40AF),
                     child: const Icon(
                       Icons.home_rounded,
                       color: Colors.white,
