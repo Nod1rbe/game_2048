@@ -1,4 +1,4 @@
-package com.example.game_2048
+package com.nod1rbe.fruitmerge
 
 import io.flutter.embedding.android.FlutterActivity
 
