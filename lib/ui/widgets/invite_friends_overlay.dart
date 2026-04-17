@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:game_2048/utils/localization.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -15,7 +16,6 @@ class InviteFriendsOverlay extends StatelessWidget {
           'body': 'Hey! Check out this cool fruit game: https://game2048.page.link/invite',
         },
       );
-      // Try to launch directly, catch error if impossible
       await launchUrl(smsLaunchUri);
     } catch (e) {
       if (context.mounted) {
@@ -46,7 +46,7 @@ class InviteFriendsOverlay extends StatelessWidget {
     return GestureDetector(
       onTap: onClose,
       child: Container(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withValues(alpha: 0.7),
         child: Center(
           child: GestureDetector(
             onTap: () {},
@@ -56,10 +56,10 @@ class InviteFriendsOverlay extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF4F46E5),
                 borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF4F46E5).withOpacity(0.5),
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.5),
                     blurRadius: 40,
                     spreadRadius: 5,
                   ),
@@ -68,37 +68,27 @@ class InviteFriendsOverlay extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Invite Friends!',
-                    style: TextStyle(
+                  Text(
+                    GameTexts.get('DO\'STLARNI TAKLIF QILISH'),
+                    style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 32,
+                      fontSize: 28,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                   _InviteButton(
                     icon: Icons.contact_phone_rounded,
-                    label: 'Invite friends Contacts',
+                    label: GameTexts.get('Kontaktlarni taklif qilish'),
                     onTap: () => _inviteContacts(context),
                     color: Colors.orangeAccent,
                   ),
                   const SizedBox(height: 16),
                   _InviteButton(
-                    icon: Icons.facebook_rounded,
-                    label: 'Invite friends Facebook',
+                    icon: Icons.share,
+                    label: GameTexts.get('Facebook orqali taklif qilish'),
                     onTap: () => _shareApp(context),
                     color: Colors.blueAccent,
-                  ),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'When you invite friends to join, you will receive 1 life save',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
                   ),
                 ],
               ),
@@ -135,7 +125,7 @@ class _InviteButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

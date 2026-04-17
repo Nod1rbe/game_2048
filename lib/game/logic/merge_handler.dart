@@ -1,5 +1,4 @@
 import 'package:flame/components.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../configs/fruit_config.dart';
 import '../fruit_body.dart';
 import '../suika_game.dart';
@@ -51,10 +50,7 @@ class MergeHandler {
 
       game.score += a.cfg.level * 20;
       if (game.score > game.highScore) {
-        game.highScore = game.score;
-        SharedPreferences.getInstance().then(
-          (prefs) => prefs.setInt('highScore', game.highScore),
-        );
+        game.updateRecord(game.score);
       }
       game.scoreNotifier.value = game.score;
       if (a.isMounted) a.removeFromParent();

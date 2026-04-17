@@ -3,11 +3,15 @@ import 'package:game_2048/game/suika_game.dart';
 import 'package:game_2048/ui/widgets/common_widgets.dart';
 import 'package:game_2048/ui/widgets/hud_bar.dart';
 import 'package:game_2048/utils/localization.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'curved_bottom_bar.dart' show CurvedBottomBar;
 import 'game_theme.dart';
 import 'invite_friends_overlay.dart';
+
+import 'leaderboard_panel.dart';
+
+import 'settings_overlay.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HomePanel extends StatefulWidget {
   final SuikaGame game;
@@ -19,6 +23,8 @@ class HomePanel extends StatefulWidget {
 
 class _HomePanelState extends State<HomePanel> {
   bool _showInvite = false;
+  bool _showLeaderboard = false;
+  bool _showSettings = false;
 
   @override
   Widget build(BuildContext context) {
@@ -26,147 +32,132 @@ class _HomePanelState extends State<HomePanel> {
       body: Stack(
         children: [
           const GradientBackground(),
-          // Score at top
-          Positioned(
-            top: 50,
-            left: 20,
-            right: 20,
-            child: ValueListenableBuilder<int>(
-              valueListenable: widget.game.scoreNotifier,
-              builder: (_, v, __) => Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+          
+          if (!_showLeaderboard) ...[
+            // Score at top
+            Positioned(
+              top: 100, // Adjusted for header
+              left: 20,
+              right: 20,
+              child: ValueListenableBuilder<int>(
+                valueListenable: widget.game.scoreNotifier,
+                builder: (_, v, __) => Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ScoreChip(
+                      label: GameTexts.get('BALL'),
+                      value: v,
+                      accent: GameTheme.accent,
+                    ),
+                    const SizedBox(width: 12),
+                    ScoreChip(
+                      label: GameTexts.get('REKORD'),
+                      value: widget.game.highScore,
+                      accent: GameTheme.gold,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Center(
+              child: OverlayPanel(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: GameTheme.surfaceHigh,
+                        border: Border.all(
+                          color: GameTheme.accent.withOpacity(0.3),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: GameTheme.accent.withOpacity(0.2),
+                            blurRadius: 32,
+                            spreadRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Text('🍉', style: TextStyle(fontSize: 60)),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      GameTexts.get('SUIKA'),
+                      style: TextStyle(
+                        color: GameTheme.surfaceHigh,
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 8,
+                        fontFamily: GameTheme.fontDisplay,
+                        shadows: [
+                          Shadow(
+                            color: GameTheme.accent.withOpacity(0.5),
+                            blurRadius: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ] else
+            LeaderboardPanel(game: widget.game),
+
+          // Header: Nickname and Settings (MOVED AFTER CENTER)
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  ScoreChip(
-                    label: GameTexts.get('BALL'),
-                    value: v,
-                    accent: GameTheme.accent,
+                  ValueListenableBuilder<String>(
+                    valueListenable: widget.game.nicknameNotifier,
+                    builder: (_, name, __) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.person_rounded, color: Colors.white, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            name,
+                            style: GoogleFonts.outfit(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  ScoreChip(
-                    label: GameTexts.get('REKORD'),
-                    value: widget.game.highScore,
-                    accent: GameTheme.gold,
+                  IconButton(
+                    onPressed: () => setState(() => _showSettings = true),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      child: const Icon(Icons.settings_rounded, color: Colors.white, size: 20),
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-          ValueListenableBuilder<String>(
-            valueListenable: SuikaGame.langNotifier,
-            builder: (context, lang, _) {
-              return Center(
-                child: OverlayPanel(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: ['uz', 'ru', 'en'].map((l) {
-                          final isSel = lang == l;
-                          return GestureDetector(
-                            onTap: () {
-                              SuikaGame.langNotifier.value = l;
-                              SharedPreferences.getInstance().then(
-                                (p) => p.setString('lang', l),
-                              );
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 8),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSel
-                                    ? GameTheme.accent
-                                    : GameTheme.surfaceHigh,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isSel
-                                      ? Colors.white
-                                      : GameTheme.border,
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Text(
-                                l.toUpperCase(),
-                                style: TextStyle(
-                                  color: isSel
-                                      ? Colors.white
-                                      : const Color(
-                                          0xFF6366F1,
-                                        ).withOpacity(0.7),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 24),
-                      Container(
-                        width: 110,
-                        height: 110,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: GameTheme.surfaceHigh,
-                          border: Border.all(
-                            color: GameTheme.accent.withOpacity(0.3),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: GameTheme.accent.withOpacity(0.2),
-                              blurRadius: 32,
-                              spreadRadius: 4,
-                            ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Text('🍉', style: TextStyle(fontSize: 60)),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        GameTexts.get('SUIKA'),
-                        style: TextStyle(
-                          color: GameTheme.accent,
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 8,
-                          fontFamily: GameTheme.fontDisplay,
-                          shadows: [
-                            Shadow(
-                              color: GameTheme.accent.withOpacity(0.5),
-                              blurRadius: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        GameTexts.get('MEVALARNI BIRLASHTIRING'),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: const Color(0xFF6366F1),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 4,
-                          shadows: [
-                            Shadow(
-                              color: const Color(0xFF6366F1).withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 120),
-                    ],
-                  ),
-                ),
-              );
-            },
           ),
           Positioned(
             bottom: 0,
@@ -178,12 +169,17 @@ class _HomePanelState extends State<HomePanel> {
                 Navigator.pushNamed(context, '/game');
               },
               onInvite: () => setState(() => _showInvite = true),
-              onLeaderboard: () {},
+              onLeaderboard: () => setState(() => _showLeaderboard = !_showLeaderboard),
             ),
           ),
           if (_showInvite)
             InviteFriendsOverlay(
               onClose: () => setState(() => _showInvite = false),
+            ),
+          if (_showSettings)
+            SettingsOverlay(
+              game: widget.game,
+              onClose: () => setState(() => _showSettings = false),
             ),
         ],
       ),

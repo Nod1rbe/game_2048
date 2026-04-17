@@ -1,14 +1,14 @@
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flutter/material.dart';
+import 'package:game_2048/game/logic/fruit_physics.dart';
 
 import '../configs/fruit_config.dart';
 import 'fruit_assets.dart';
 import 'suika_game.dart';
 
-import 'logic/fruit_physics.dart';
-
 class FruitBody extends BodyComponent with ContactCallbacks {
   final FruitConfig cfg;
+  @override
   final SuikaGame game;
   final Vector2 startPos;
   bool isStatic;
@@ -28,17 +28,43 @@ class FruitBody extends BodyComponent with ContactCallbacks {
   static final Map<double, MaskFilter> _blurCache = {};
   static const int _blurCacheMaxSize = 10;
 
-  @override void onMount() { super.onMount(); game.registerFruit(this); }
-  @override void onRemove() { game.unregisterFruit(this); super.onRemove(); }
+  @override
+  void onMount() {
+    super.onMount();
+    game.registerFruit(this);
+  }
 
-  FruitBody({required this.cfg, required this.game, required this.startPos, this.isStatic = false, this.initVel, this.popIn = false}) {
-    if (popIn) { _scale = 0.2; _growing = true; }
+  @override
+  void onRemove() {
+    game.unregisterFruit(this);
+    super.onRemove();
+  }
+
+  FruitBody({
+    required this.cfg,
+    required this.game,
+    required this.startPos,
+    this.isStatic = false,
+    this.initVel,
+    this.popIn = false,
+  }) {
+    if (popIn) {
+      _scale = 0.2;
+      _growing = true;
+    }
   }
 
   double get _mRadius => cfg.radiusPx / SuikaGame.scale;
 
   @override
-  Body createBody() => FruitPhysics.create(world, cfg: cfg, pos: startPos, isStatic: isStatic, vel: initVel, userData: this);
+  Body createBody() => FruitPhysics.create(
+    world,
+    cfg: cfg,
+    pos: startPos,
+    isStatic: isStatic,
+    vel: initVel,
+    userData: this,
+  );
 
   void activate() {
     isStatic = false;
@@ -107,9 +133,10 @@ class FruitBody extends BodyComponent with ContactCallbacks {
     }
 
     if (dangerTimer > 0.4 && !isStatic) {
-      final blurRadius = (r * 0.4 * 2).roundToDouble() / 2; // round to 0.5 steps
-      _glowPaint.color = Colors.redAccent.withOpacity(
-        (dangerTimer / 1.8 * 0.5).clamp(0.0, 0.5),
+      final blurRadius =
+          (r * 0.4 * 2).roundToDouble() / 2; // round to 0.5 steps
+      _glowPaint.color = Colors.redAccent.withValues(
+        alpha: (dangerTimer / 1.8 * 0.5).clamp(0.0, 0.5),
       );
       if (!_blurCache.containsKey(blurRadius)) {
         if (_blurCache.length >= _blurCacheMaxSize) {
