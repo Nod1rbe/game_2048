@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../game/suika_game.dart';
 import 'widgets/hud_bar.dart';
-import 'widgets/home_panel.dart';
+
 import 'widgets/game_over_panel.dart';
 import 'widgets/pause_panel.dart';
 

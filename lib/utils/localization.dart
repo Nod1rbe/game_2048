@@ -15,6 +15,9 @@ class GameTexts {
       'Ajoyib!': 'Ajoyib!',
       'Combo x3!': 'Combo x3!',
       'Dahshat!': 'Dahshat!',
+      'DO\'STLARNI TAKLIF QILISH': 'DO\'STLARNI TAKLIF QILISH',
+      'Kontaktlarni taklif qilish': 'Kontaktlarni taklif qilish',
+      'Facebook orqali taklif qilish': 'Ulashish',
     },
     'ru': {
       'SUIKA': 'FRUITMERGE',
@@ -29,6 +32,9 @@ class GameTexts {
       'Ajoyib!': 'Отлично!',
       'Combo x3!': 'Комбо x3!',
       'Dahshat!': 'Невероятно!',
+      'DO\'STLARNI TAKLIF QILISH': 'ПРИГЛАСИТЬ ДРУЗЕЙ',
+      'Kontaktlarni taklif qilish': 'Пригласить контакты',
+      'Facebook orqali taklif qilish': 'Делиться',
     },
     'en': {
       'SUIKA': 'FRUITMERGE',
@@ -43,6 +49,9 @@ class GameTexts {
       'Ajoyib!': 'Great!',
       'Combo x3!': 'Combo x3!',
       'Dahshat!': 'Awesome!',
+      'DO\'STLARNI TAKLIF QILISH': 'INVITE FRIENDS!',
+      'Kontaktlarni taklif qilish': 'Invite friends Contacts',
+      'Facebook orqali taklif qilish': 'Share',
     }
   };
 

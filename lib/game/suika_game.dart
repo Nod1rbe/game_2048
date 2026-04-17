@@ -5,6 +5,7 @@ import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../configs/fruit_config.dart';
+import '../utils/supabase_service.dart';
 import 'box_background.dart';
 import 'fruit_assets.dart';
 import 'fruit_body.dart';
@@ -21,7 +22,10 @@ class SuikaGame extends Forge2DGame with TapCallbacks, DragCallbacks {
   late double screenW, screenH, boxL, boxR, boxT, boxB, wallThick, dropY, dangerY;
   FruitBody? _pending;
   bool _canDrop = true, gameOver = false;
+  String userId = '';
+  final nicknameNotifier = ValueNotifier<String>('Player');
   int score = 0, highScore = 0;
+  bool highScoreSynced = true;
   final List<FruitBody> _activeFruits = [];
   final audio = AudioManager();
   late final MergeHandler _merger = MergeHandler(this);
@@ -34,17 +38,30 @@ class SuikaGame extends Forge2DGame with TapCallbacks, DragCallbacks {
 
   @override
   Future<void> onLoad() async {
+    await loadPrefs();
     await FruitAssets.loadAll();
     await audio.init();
-    final prefs = await SharedPreferences.getInstance();
-    highScore = prefs.getInt('highScore') ?? 0;
-    langNotifier.value = prefs.getString('lang') ?? 'uz';
+    
     camera.viewfinder.anchor = Anchor.topLeft;
     world.physicsWorld.setAllowSleep(true);
     _setupLayout();
     world.add(BoxBackground(boxL: boxL, boxR: boxR, boxT: boxT, boxB: boxB, dangerY: dangerY));
     _buildWalls();
     if (gameStartedNotifier.value) restart();
+  }
+
+  Future<void> loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    highScore = prefs.getInt('highScore') ?? 0;
+    highScoreSynced = prefs.getBool('highScore_synced') ?? true;
+    userId = prefs.getString('userId') ?? '';
+    nicknameNotifier.value = prefs.getString('nickname') ?? 'Player';
+    langNotifier.value = prefs.getString('lang') ?? 'uz';
+    
+    // Try to sync if pending
+    if (!highScoreSynced && userId.isNotEmpty) {
+      SupabaseService.syncPendingScore(userId, nicknameNotifier.value, highScore);
+    }
   }
 
   void _setupLayout() {
@@ -137,4 +154,17 @@ class SuikaGame extends Forge2DGame with TapCallbacks, DragCallbacks {
 
   void registerFruit(FruitBody f) => _activeFruits.add(f);
   void unregisterFruit(FruitBody f) => _activeFruits.remove(f);
+
+  Future<void> updateRecord(int newScore) async {
+    if (newScore <= highScore) return;
+    
+    highScore = newScore;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('highScore', highScore);
+    
+    if (userId.isNotEmpty) {
+      await SupabaseService.updateHighScore(userId, nicknameNotifier.value, highScore);
+      highScoreSynced = prefs.getBool('highScore_synced') ?? true;
+    }
+  }
 }
